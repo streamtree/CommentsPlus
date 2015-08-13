@@ -1,25 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Text.Editor;
-
-namespace CommentsPlus.ItalicComments
+﻿namespace CommentsPlus.ItalicComments
 {
+    #region Usings
+
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Windows;
+    using System.Windows.Media;
+    using Microsoft.VisualStudio.Text.Classification;
+    using Microsoft.VisualStudio.Text.Editor;
+    using Microsoft.VisualStudio.Text.Formatting;
+
+    #endregion Usings
+
     internal sealed class FormatMapWatcher : IDisposable
     {
-        bool _inUpdate = false;
-        IClassificationFormatMap _formatMap;
-        IClassificationTypeRegistryService _typeRegistry;
-        ITextView _view;
+        #region Private Fields
 
-        static readonly List<string> CommentTypes = new List<string>() { "comment", "xml doc comment", "vb xml doc comment", "xml comment", "html comment", "xaml comment" };
-        static readonly List<string> DocTagTypes = new List<string>() { "xml doc tag", "vb xml doc tag", "xml doc attribute" };
+        private static readonly List<string> CommentTypes = new List<string>
+                                                            {
+                                                                "comment",
+                                                                "xml doc comment",
+                                                                "vb xml doc comment",
+                                                                "xml comment",
+                                                                "html comment",
+                                                                "xaml comment"
+                                                            };
 
-        public FormatMapWatcher(ITextView view, IClassificationFormatMap formatMap, IClassificationTypeRegistryService typeRegistry)
+        private static readonly List<string> DocTagTypes = new List<string>
+                                                           {
+                                                               "xml doc tag",
+                                                               "vb xml doc tag",
+                                                               "xml doc attribute"
+                                                           };
+
+        private IClassificationFormatMap _formatMap;
+        private bool _inUpdate;
+        private IClassificationTypeRegistryService _typeRegistry;
+        private ITextView _view;
+
+        #endregion Private Fields
+
+        #region Public Constructors
+
+        public FormatMapWatcher(ITextView view,
+                                IClassificationFormatMap formatMap,
+                                IClassificationTypeRegistryService typeRegistry)
         {
             _view = view;
             _formatMap = formatMap;
@@ -32,6 +59,10 @@ namespace CommentsPlus.ItalicComments
             view.GotAggregateFocus += FirstGotFocus;
             view.Closed += view_Closed;
         }
+
+        #endregion Public Constructors
+
+        #region Public Methods
 
         public void Dispose()
         {
@@ -50,16 +81,11 @@ namespace CommentsPlus.ItalicComments
             _typeRegistry = null;
         }
 
-        void view_Closed(object sender, EventArgs e)
-        {
-            var view = sender as ITextView;
-            if (view != null)
-                view.Closed -= view_Closed;
+        #endregion Public Methods
 
-            Dispose();
-        }
+        #region Private Methods
 
-        void FirstGotFocus(object sender, EventArgs e)
+        private void FirstGotFocus(object sender, EventArgs e)
         {
             var view = sender as ITextView;
             if (view != null)
@@ -70,17 +96,12 @@ namespace CommentsPlus.ItalicComments
             FixComments();
         }
 
-        void FormatMapChanged(object sender, EventArgs e)
-        {
-            FixComments();
-        }
-
-        internal void FixComments()
+        private void FixComments()
         {
             if (_inUpdate || _formatMap == null || (_view != null && _view.IsClosed))
                 return;
 
-            bool batch = false;
+            var batch = false;
             try
             {
                 _inUpdate = true;
@@ -94,29 +115,32 @@ namespace CommentsPlus.ItalicComments
                 // First, go through the ones we know about:
 
                 // 1) Known comment types are italicized
-                foreach (var type in CommentTypes.Select(t => _typeRegistry.GetClassificationType(t)).Where(t => t != null))
+                foreach (
+                    IClassificationType type in
+                        CommentTypes.Select(t => _typeRegistry.GetClassificationType(t)).Where(t => t != null))
                 {
                     Italicize(type);
                 }
 
                 // 2) Known doc tags
-                foreach (var type in DocTagTypes.Select(t => _typeRegistry.GetClassificationType(t)).Where(t => t != null))
+                foreach (
+                    IClassificationType type in
+                        DocTagTypes.Select(t => _typeRegistry.GetClassificationType(t)).Where(t => t != null))
                 {
                     Italicize(type);
                 }
 
                 // 3) Grab everything else that looks like a comment or doc tag
-                foreach (var classification in _formatMap.CurrentPriorityOrder.Where(c => c != null))
+                foreach (IClassificationType classification in _formatMap.CurrentPriorityOrder.Where(c => c != null))
                 {
-                    string name = classification.Classification;
-                    var comparer = StringComparer.OrdinalIgnoreCase;
+                    var name = classification.Classification;
+                    StringComparer comparer = StringComparer.OrdinalIgnoreCase;
                     if (CommentTypes.Contains(name, comparer) || DocTagTypes.Contains(name, comparer))
                         continue;
 
-                    if (name.IndexOf("comment", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("doc tag", StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
+                    if (name.IndexOf("comment", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        name.IndexOf("doc tag", StringComparison.OrdinalIgnoreCase) >= 0)
                         Italicize(classification);
-                    }
                 }
             }
             finally
@@ -127,22 +151,44 @@ namespace CommentsPlus.ItalicComments
             }
         }
 
-        /// <summary>Set italics for classification.</summary>
+        private void FormatMapChanged(object sender, EventArgs e)
+        {
+            FixComments();
+        }
+
+        /// <summary>
+        /// Set italics for classification.
+        /// </summary>
         /// <param name="classification">The classification to process.</param>
-        void Italicize(IClassificationType classification)
+        private void Italicize(IClassificationType classification)
         {
             /* Get the classification text properties */
-            var properties = _formatMap.GetTextProperties(classification);
+            TextFormattingRunProperties properties = _formatMap.GetTextProperties(classification);
 
             //If italics has already been determined, skip it
             if (!properties.ItalicEmpty)
                 return;
 
-            //add italics 
-            properties = properties.SetItalic(true);
+            //Add italics, new font
+            properties = properties.SetTypeface(new Typeface(new FontFamily("Lucida Sans"),
+                                                             FontStyles.Italic,
+                                                             FontWeights.Normal,
+                                                             new FontStretch()));
+            properties = properties.SetFontRenderingEmSize(properties.FontRenderingEmSize - 1.0);
 
             // And put it back in the format map
             _formatMap.SetTextProperties(classification, properties);
         }
+
+        private void view_Closed(object sender, EventArgs e)
+        {
+            var view = sender as ITextView;
+            if (view != null)
+                view.Closed -= view_Closed;
+
+            Dispose();
+        }
+
+        #endregion Private Methods
     }
 }

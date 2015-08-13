@@ -1,28 +1,29 @@
 ﻿//#define DIAG_TIMING
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Diagnostics;
-using System.Linq;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Tagging;
-using Microsoft.VisualStudio.Utilities;
-using Microsoft.Win32;
 
 namespace CommentsPlus.CommentClassifier
 {
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel.Composition;
+    using System.Diagnostics;
+    using System.Linq;
+    using Microsoft.VisualStudio.Text;
+    using Microsoft.VisualStudio.Text.Classification;
+    using Microsoft.VisualStudio.Text.Editor;
+    using Microsoft.VisualStudio.Text.Tagging;
+    using Microsoft.VisualStudio.Utilities;
+    using Microsoft.Win32;
+
     [Export(typeof(IViewTaggerProvider))]
     [ContentType("code")]
     [TagType(typeof(ClassificationTag))]
     public class CommentTaggerProvider : IViewTaggerProvider
     {
         [Import]
-        internal IClassificationTypeRegistryService ClassificationRegistry = null;
+        internal IClassificationTypeRegistryService ClassificationRegistry;
 
         [Import]
-        internal IBufferTagAggregatorFactoryService Aggregator = null;
+        internal IBufferTagAggregatorFactoryService Aggregator;
 
         public ITagger<T> CreateTagger<T>(ITextView textView, ITextBuffer buffer) where T : ITag
         {
@@ -33,13 +34,13 @@ namespace CommentsPlus.CommentClassifier
 
     class CommentTagger : ITagger<ClassificationTag>
     {
-        Dictionary<Classification, ClassificationTag> _classifications;
-        Dictionary<Classification, ClassificationTag> _htmlClassifications;
-        Dictionary<Classification, ClassificationTag> _xmlClassifications;
+        readonly Dictionary<Classification, ClassificationTag> _classifications;
+        readonly Dictionary<Classification, ClassificationTag> _htmlClassifications;
+        readonly Dictionary<Classification, ClassificationTag> _xmlClassifications;
 
-        ITagAggregator<IClassificationTag> _aggregator;
+        readonly ITagAggregator<IClassificationTag> _aggregator;
 
-        static bool _enabled;
+        static readonly bool Enabled;
 
         static readonly string[] Comments = { "//", "'", "#", "<!--"/*, "/*"*/ };
 
@@ -57,13 +58,13 @@ namespace CommentsPlus.CommentClassifier
 
         internal CommentTagger(IClassificationTypeRegistryService registry, ITagAggregator<IClassificationTag> aggregator)
         {
-            _classifications = new string[] { Constants.ImportantComment, Constants.QuestionComment, Constants.WtfComment, Constants.RemovedComment, Constants.TaskComment }
+            _classifications = new[] { Constants.ImportantComment, Constants.QuestionComment, Constants.WtfComment, Constants.RemovedComment, Constants.TaskComment }
                     .ToDictionary(GetClassification, s => new ClassificationTag(registry.GetClassificationType(s)));
 
-            _htmlClassifications = new string[] { Constants.ImportantHtmlComment, Constants.QuestionHtmlComment, Constants.WtfComment, Constants.RemovedHtmlComment, Constants.TaskHtmlComment }
+            _htmlClassifications = new[] { Constants.ImportantHtmlComment, Constants.QuestionHtmlComment, Constants.WtfComment, Constants.RemovedHtmlComment, Constants.TaskHtmlComment }
                     .ToDictionary(GetClassification, s => new ClassificationTag(registry.GetClassificationType(s)));
 
-            _xmlClassifications = new string[] { Constants.ImportantXmlComment, Constants.QuestionXmlComment, Constants.WtfComment, Constants.RemovedXmlComment, Constants.TaskXmlComment }
+            _xmlClassifications = new[] { Constants.ImportantXmlComment, Constants.QuestionXmlComment, Constants.WtfComment, Constants.RemovedXmlComment, Constants.TaskXmlComment }
                     .ToDictionary(GetClassification, s => new ClassificationTag(registry.GetClassificationType(s)));
 
             _aggregator = aggregator;
@@ -71,19 +72,22 @@ namespace CommentsPlus.CommentClassifier
 
         static CommentTagger()
         {
-            _enabled = IsEnabled();
+            Enabled = IsEnabled();
         }
 
         static bool IsEnabled()
         {
-            bool res = true;
+            var res = true;
 
             try
             {
                 using (var subKey = Registry.CurrentUser.OpenSubKey("Software\\CommentsPlus", false))
                 {
-                    int value = Convert.ToInt32(subKey.GetValue("EnableTags", 1));
-                    res = value != 0;
+                    if (subKey != null)
+                    {
+                        var value = Convert.ToInt32(subKey.GetValue("EnableTags", 1));
+                        res = value != 0;
+                    }
                 }
             }
             catch (Exception ex)
@@ -114,15 +118,15 @@ namespace CommentsPlus.CommentClassifier
 
         private IEnumerable<ITagSpan<ClassificationTag>> GetTagsInternal(NormalizedSnapshotSpanCollection spans)
         {
-            if (!_enabled || spans.Count == 0)
+            if (!Enabled || spans.Count == 0)
                 return EmptyTags;
 
-            ITextSnapshot snapshot = spans[0].Snapshot;
+            var snapshot = spans[0].Snapshot;
             var contentType = snapshot.TextBuffer.ContentType;
             if (!contentType.IsOfType("code"))
                 return EmptyTags;
 
-            bool isMarkup = IsMarkup(contentType);
+            var isMarkup = IsMarkup(contentType);
 
             var lookup = _classifications;
             if (IsHtmlMarkup(contentType))
@@ -135,7 +139,7 @@ namespace CommentsPlus.CommentClassifier
             foreach (var tagSpan in _aggregator.GetTags(spans))
             {
                 // find spans that the language service has already classified as comments ...
-                string classificationName = tagSpan.Tag.ClassificationType.Classification;
+                var classificationName = tagSpan.Tag.ClassificationType.Classification;
                 if (!classificationName.Contains("comment", StringComparison.OrdinalIgnoreCase))
                     continue;
 
@@ -145,8 +149,8 @@ namespace CommentsPlus.CommentClassifier
                     // ... and from those, ones that match our comment strings
                     var snapshotSpan = nssc[0];
 
-                    string text = snapshotSpan.GetText();
-                    if (String.IsNullOrWhiteSpace(text))
+                    var text = snapshotSpan.GetText();
+                    if (string.IsNullOrWhiteSpace(text))
                         continue;
 
                     //NOTE: markup comment span does not include comment start token
@@ -159,9 +163,9 @@ namespace CommentsPlus.CommentClassifier
                         commentType = "";
                     }
 
-                    int startIndex = commentType.Length;
+                    var startIndex = commentType.Length;
 
-                    int endTokenLength = 0;
+                    var endTokenLength = 0;
                     if (isMarkup && commentType.Length > 0)
                     {
                         if (!text.EndsWith("-->"))
@@ -185,7 +189,7 @@ namespace CommentsPlus.CommentClassifier
                     {
                         if (commentType == "//" && match == "//")
                         {
-                            int len = startIndex + match.Length;
+                            var len = startIndex + match.Length;
                             if (text.Length > len && text[len] != '/')
                                 ctag = lookup[Classification.Removed];
                         }
@@ -201,7 +205,7 @@ namespace CommentsPlus.CommentClassifier
                     }
                     else if (Match(text, startIndex, TaskComments, StringComparison.OrdinalIgnoreCase, out match))
                     {
-                        bool fix = FixTaskComment(text, startIndex, ref match);
+                        FixTaskComment(text, startIndex, ref match);
                         ctag = lookup[Classification.Task];
                     }
                     else if (Match(text, startIndex, WtfComments, out match))
@@ -209,40 +213,37 @@ namespace CommentsPlus.CommentClassifier
                         ctag = lookup[Classification.Wtf];
                     }
 
-                    if (ctag != null)
-                    {
-                        int matchLength = commentType.Length + match.Length;
+                    if (ctag == null)
+                        continue;
 
-                        int spanLength = /*removedSpanLength ??*/ (snapshotSpan.Length - (matchLength + endTokenLength));
+                    var matchLength = commentType.Length + match.Length;
 
-                        var span = new SnapshotSpan(snapshotSpan.Snapshot, snapshotSpan.Start + matchLength, spanLength);
-                        var outTagSpan = new TagSpan<ClassificationTag>(span, ctag);
+                    var spanLength = /*removedSpanLength ??*/ (snapshotSpan.Length - (matchLength + endTokenLength));
 
-                        if (resultTags == null)
-                            resultTags = new List<ITagSpan<ClassificationTag>>();
+                    var span = new SnapshotSpan(snapshotSpan.Snapshot, snapshotSpan.Start + matchLength, spanLength);
+                    var outTagSpan = new TagSpan<ClassificationTag>(span, ctag);
 
-                        resultTags.Add(outTagSpan);
-                    }
+                    if (resultTags == null)
+                        resultTags = new List<ITagSpan<ClassificationTag>>();
+
+                    resultTags.Add(outTagSpan);
                 }
             }
 
             return resultTags ?? EmptyTags;
         }
 
-        private static bool FixTaskComment(string text, int startIndex, ref string match)
+        private static void FixTaskComment(string text, int startIndex, ref string match)
         {
-            bool res = false;
-            if (match != null && match.EndsWith("@", StringComparison.Ordinal))
-            {
-                int index = text.IndexOfAny(new char[] { ' ', '\t', ':' }, startIndex + match.Length);
-                if (index >= 0)
-                {
-                    int len = (index - startIndex) + 1;
-                    match = text.Substring(startIndex, len);
-                    res = true;
-                }
-            }
-            return res;
+            if (match == null || !match.EndsWith("@", StringComparison.Ordinal))
+                return;
+
+            var index = text.IndexOfAny(new[] { ' ', '\t', ':' }, startIndex + match.Length);
+            if (index < 0)
+                return;
+
+            var len = (index - startIndex) + 1;
+            match = text.Substring(startIndex, len);
         }
 
         static bool Match(string commentText, int startIndex, string[] templates, out string match)
@@ -274,20 +275,20 @@ namespace CommentsPlus.CommentClassifier
 
         private bool IsMarkup(IContentType contentType)
         {
-            bool res = IsHtmlMarkup(contentType) || IsXmlMarkup(contentType);
+            var res = IsHtmlMarkup(contentType) || IsXmlMarkup(contentType);
 
             return res;
         }
 
         private static bool IsHtmlMarkup(IContentType contentType)
         {
-            bool res = contentType.IsOfType("html") || contentType.IsOfType("htmlx");
+            var res = contentType.IsOfType("html") || contentType.IsOfType("htmlx");
             return res;
         }
 
         private static bool IsXmlMarkup(IContentType contentType)
         {
-            bool res = contentType.IsOfType("XAML") || contentType.IsOfType("XML");
+            var res = contentType.IsOfType("XAML") || contentType.IsOfType("XML");
             return res;
         }
     }
@@ -304,16 +305,16 @@ namespace CommentsPlus.CommentClassifier
 
         public static bool Contains(this string text, string value, StringComparison comparison)
         {
-            if (String.IsNullOrEmpty(text) || String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(value))
                 return false;
 
-            int index = text.IndexOf(value, comparison);
+            var index = text.IndexOf(value, comparison);
             return index >= 0;
         }
 
-        public static bool StartsWith(this string text, string value, int startIndex, StringComparison comparison = StringComparison.Ordinal)
+        private static bool StartsWith(this string text, string value, int startIndex, StringComparison comparison = StringComparison.Ordinal)
         {
-            if (String.IsNullOrEmpty(text) || startIndex > text.Length || String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(text) || startIndex > text.Length || string.IsNullOrEmpty(value))
                 return false;
 
             return text.IndexOf(value, startIndex, comparison) == startIndex;
@@ -321,30 +322,18 @@ namespace CommentsPlus.CommentClassifier
 
         public static string StartsWithOneOf(this string text, string[] strings, StringComparison comparison = StringComparison.Ordinal)
         {
-            if (String.IsNullOrEmpty(text) || strings == null || strings.Length == 0)
+            if (string.IsNullOrEmpty(text) || strings == null || strings.Length == 0)
                 return null;
 
-            foreach (string t in strings)
-            {
-                if (text.StartsWith(t, comparison))
-                    return t;
-            }
-
-            return null;
+            return strings.FirstOrDefault(t => text.StartsWith(t, comparison));
         }
 
         public static string StartsWithOneOf(this string text, int startIndex, string[] strings, StringComparison comparison = StringComparison.Ordinal)
         {
-            if (String.IsNullOrEmpty(text) || strings == null || strings.Length == 0)
+            if (string.IsNullOrEmpty(text) || strings == null || strings.Length == 0)
                 return null;
 
-            foreach (string t in strings)
-            {
-                if (text.StartsWith(t, startIndex, comparison))
-                    return t;
-            }
-
-            return null;
+            return strings.FirstOrDefault(t => text.StartsWith(t, startIndex, comparison));
         }
     }
 }

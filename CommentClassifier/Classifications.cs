@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Windows.Media;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Utilities;
-
-namespace CommentsPlus.CommentClassifier
+﻿namespace CommentsPlus.CommentClassifier
 {
+    #region Usings
+
+    using System.ComponentModel.Composition;
+    using System.Windows.Media;
+    using Microsoft.VisualStudio.Text.Classification;
+    using Microsoft.VisualStudio.Utilities;
+
+    #endregion Usings
+
     //The quick brown fox jumps over the lazy dog
     //! Important note
     //? What's all this?
@@ -27,12 +27,12 @@ namespace CommentsPlus.CommentClassifier
     ////string commentedOut = OldMethod(a++); /* an old style comment */
 
     /*? hallo for en kommentar!? */
-    /*! A long comment - will it get bold!? 
+    /*! A long comment - will it get bold!?
      * Should this be bold as well?
      * Another line
    */
 
-    enum Classification
+    internal enum Classification
     {
         None,
         Important,
@@ -43,304 +43,342 @@ namespace CommentsPlus.CommentClassifier
     }
 
     /*!? Normal comment - should be italics '*/
-    static class Constants
-    {
-        //! Important
-        public const String ImportantComment = "Comment - Important";
-        public const String ImportantHtmlComment = "HTML Comment - Important";
-        public const String ImportantXmlComment = "XML Comment - Important";
-        //? Question
-        public const String QuestionComment = "Comment - Question";
-        public const String QuestionHtmlComment = "HTML Comment - Question";
-        public const String QuestionXmlComment = "XML Comment - Question";
-        //!? WTF
-        public const String WtfComment = "Comment - WAT!?";
-
-        //x Removed
-        public const String RemovedComment = "Comment - Removed";
-        public const String RemovedHtmlComment = "HTML Comment - Removed";
-        public const String RemovedXmlComment = "XML Comment - Removed";
-        //TODO: This does not need work
-        public const String TaskComment = "Comment - Task";
-        public const String TaskHtmlComment = "HTML Comment - Task";
-        public const String TaskXmlComment = "XML Comment - Task";
-
-        public static readonly Color ImportantColor = Colors.Green;
-        public static readonly Color QuestionColor = Colors.Red;
-        public static readonly Color WtfColor = Colors.Purple;
-        public static readonly Color RemovedColor = Colors.Gray;
-        public static readonly Color TaskColor = Color.FromRgb(192, 96, 0);
-    }
 
     public static class ClassificationDefinitions
     {
-        [Export(typeof(ClassificationTypeDefinition))]
-        [BaseDefinition("Comment")]
-        [Name(Constants.ImportantComment)]
-        internal static ClassificationTypeDefinition ImportantCommentClassificationType = null;
+        #region Internal Fields
 
-        [Export(typeof(ClassificationTypeDefinition))]
-        [BaseDefinition("Comment")]
-        [Name(Constants.QuestionComment)]
-        internal static ClassificationTypeDefinition QuestionCommentClassificationType = null;
+        [Export(typeof (ClassificationTypeDefinition))] [BaseDefinition("Comment")] [Name(Constants.ImportantComment)] internal static ClassificationTypeDefinition ImportantCommentClassificationType = null;
 
-        [Export(typeof(ClassificationTypeDefinition))]
-        [BaseDefinition("Comment")]
-        [Name(Constants.WtfComment)]
-        internal static ClassificationTypeDefinition WtfCommentClassificationType = null;
+        [Export(typeof (ClassificationTypeDefinition))] [BaseDefinition("Comment")] [Name(Constants.QuestionComment)] internal static ClassificationTypeDefinition QuestionCommentClassificationType = null;
 
-        [Export(typeof(ClassificationTypeDefinition))]
-        [BaseDefinition("Comment")]
-        [Name(Constants.RemovedComment)]
-        internal static ClassificationTypeDefinition StrikeoutCommentClassificationType = null;
+        [Export(typeof (ClassificationTypeDefinition))] [BaseDefinition("Comment")] [Name(Constants.RemovedComment)] internal static ClassificationTypeDefinition StrikeoutCommentClassificationType = null;
 
-        [Export(typeof(ClassificationTypeDefinition))]
-        [BaseDefinition("Comment")]
-        [Name(Constants.TaskComment)]
-        internal static ClassificationTypeDefinition TaskCommentClassificationType = null;
+        [Export(typeof (ClassificationTypeDefinition))] [BaseDefinition("Comment")] [Name(Constants.TaskComment)] internal static ClassificationTypeDefinition TaskCommentClassificationType = null;
+
+        [Export(typeof (ClassificationTypeDefinition))] [BaseDefinition("Comment")] [Name(Constants.WtfComment)] internal static ClassificationTypeDefinition WtfCommentClassificationType = null;
+
+        #endregion Internal Fields
 
         #region HTML
 
-        [Export(typeof(ClassificationTypeDefinition))]
-        [BaseDefinition("HTML Comment")]
-        [Name(Constants.ImportantHtmlComment)]
-        internal static ClassificationTypeDefinition ImportantHtmlCommentClassificationType = null;
+        [Export(typeof (ClassificationTypeDefinition))] [BaseDefinition("HTML Comment")] [Name(Constants.ImportantHtmlComment)] internal static ClassificationTypeDefinition
+            ImportantHtmlCommentClassificationType = null;
 
-        [Export(typeof(ClassificationTypeDefinition))]
-        [BaseDefinition("HTML Comment")]
-        [Name(Constants.QuestionHtmlComment)]
-        internal static ClassificationTypeDefinition QuestionHtmlCommentClassificationType = null;
+        [Export(typeof (ClassificationTypeDefinition))] [BaseDefinition("HTML Comment")] [Name(Constants.QuestionHtmlComment)] internal static ClassificationTypeDefinition
+            QuestionHtmlCommentClassificationType = null;
 
-        [Export(typeof(ClassificationTypeDefinition))]
-        [BaseDefinition("HTML Comment")]
-        [Name(Constants.RemovedHtmlComment)]
-        internal static ClassificationTypeDefinition StrikeoutHtmlCommentClassificationType = null;
+        [Export(typeof (ClassificationTypeDefinition))] [BaseDefinition("HTML Comment")] [Name(Constants.RemovedHtmlComment)] internal static ClassificationTypeDefinition
+            StrikeoutHtmlCommentClassificationType = null;
 
-        [Export(typeof(ClassificationTypeDefinition))]
-        [BaseDefinition("HTML Comment")]
-        [Name(Constants.TaskHtmlComment)]
-        internal static ClassificationTypeDefinition TaskHtmlCommentClassificationType = null;
+        [Export(typeof (ClassificationTypeDefinition))] [BaseDefinition("HTML Comment")] [Name(Constants.TaskHtmlComment)] internal static ClassificationTypeDefinition TaskHtmlCommentClassificationType
+            = null;
 
-        #endregion
+        #endregion HTML
 
         #region XML
 
-        [Export(typeof(ClassificationTypeDefinition))]
-        [BaseDefinition("XML Comment")]
-        [Name(Constants.ImportantXmlComment)]
-        internal static ClassificationTypeDefinition ImportantXmlCommentClassificationType = null;
+        [Export(typeof (ClassificationTypeDefinition))] [BaseDefinition("XML Comment")] [Name(Constants.ImportantXmlComment)] internal static ClassificationTypeDefinition
+            ImportantXmlCommentClassificationType = null;
 
-        [Export(typeof(ClassificationTypeDefinition))]
-        [BaseDefinition("XML Comment")]
-        [Name(Constants.QuestionXmlComment)]
-        internal static ClassificationTypeDefinition QuestionXmlCommentClassificationType = null;
+        [Export(typeof (ClassificationTypeDefinition))] [BaseDefinition("XML Comment")] [Name(Constants.QuestionXmlComment)] internal static ClassificationTypeDefinition
+            QuestionXmlCommentClassificationType = null;
 
-        [Export(typeof(ClassificationTypeDefinition))]
-        [BaseDefinition("XML Comment")]
-        [Name(Constants.RemovedXmlComment)]
-        internal static ClassificationTypeDefinition StrikeoutXmlCommentClassificationType = null;
+        [Export(typeof (ClassificationTypeDefinition))] [BaseDefinition("XML Comment")] [Name(Constants.RemovedXmlComment)] internal static ClassificationTypeDefinition
+            StrikeoutXmlCommentClassificationType = null;
 
-        [Export(typeof(ClassificationTypeDefinition))]
-        [BaseDefinition("Xml Comment")]
-        [Name(Constants.TaskXmlComment)]
-        internal static ClassificationTypeDefinition TaskXmlCommentClassificationType = null;
+        [Export(typeof (ClassificationTypeDefinition))] [BaseDefinition("Xml Comment")] [Name(Constants.TaskXmlComment)] internal static ClassificationTypeDefinition TaskXmlCommentClassificationType = null;
 
-        #endregion
+        #endregion XML
     }
 
-    [Export(typeof(EditorFormatDefinition))]
+    [Export(typeof (EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Constants.ImportantComment)]
     [Name(Constants.ImportantComment)]
     [UserVisible(true)]
     [Order(After = Priority.High)]
     public sealed class ImportantCommentFormat : ClassificationFormatDefinition
     {
+        #region Public Constructors
+
         public ImportantCommentFormat()
         {
-            this.DisplayName = Constants.ImportantComment + " (//!)";
-            this.ForegroundColor = Constants.ImportantColor;
-            this.IsBold = true;
+            DisplayName = Constants.ImportantComment + " (//!)";
+            ForegroundColor = Constants.ImportantColor;
+            IsBold = true;
         }
+
+        #endregion Public Constructors
     }
 
-    [Export(typeof(EditorFormatDefinition))]
+    [Export(typeof (EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Constants.QuestionComment)]
     [Name(Constants.QuestionComment)]
     [UserVisible(true)]
     [Order(After = Priority.High)]
     public sealed class QuestionCommentFormat : ClassificationFormatDefinition
     {
+        #region Public Constructors
+
         public QuestionCommentFormat()
         {
-            this.DisplayName = Constants.QuestionComment + " (//?)";
-            this.ForegroundColor = Constants.QuestionColor;
+            DisplayName = Constants.QuestionComment + " (//?)";
+            ForegroundColor = Constants.QuestionColor;
         }
+
+        #endregion Public Constructors
     }
 
-    [Export(typeof(EditorFormatDefinition))]
-    [ClassificationType(ClassificationTypeNames = Constants.WtfComment)]
-    [Name(Constants.WtfComment)]
-    [UserVisible(true)]
-    [Order(After = Priority.High)]
-    public sealed class WtfCommentFormat : ClassificationFormatDefinition
-    {
-        public WtfCommentFormat()
-        {
-            this.DisplayName = Constants.WtfComment + " (//!?)";
-            this.ForegroundColor = Constants.WtfColor;
-        }
-    }
-
-    [Export(typeof(EditorFormatDefinition))]
+    [Export(typeof (EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Constants.RemovedComment)]
     [Name(Constants.RemovedComment)]
     [UserVisible(true)]
     [Order(After = Priority.High)]
     public sealed class StrikeoutCommentFormat : ClassificationFormatDefinition
     {
+        #region Public Constructors
+
         public StrikeoutCommentFormat()
         {
-            this.DisplayName = Constants.RemovedComment + " (//x)";
-            this.ForegroundColor = Constants.RemovedColor;
-            this.TextDecorations = System.Windows.TextDecorations.Strikethrough;
+            DisplayName = Constants.RemovedComment + " (//x)";
+            ForegroundColor = Constants.RemovedColor;
+            TextDecorations = System.Windows.TextDecorations.Strikethrough;
         }
+
+        #endregion Public Constructors
     }
 
-    [Export(typeof(EditorFormatDefinition))]
+    [Export(typeof (EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Constants.TaskComment)]
     [Name(Constants.TaskComment)]
     [UserVisible(true)]
     [Order(After = Priority.High)]
     public sealed class TaskCommentFormat : ClassificationFormatDefinition
     {
+        #region Public Constructors
+
         public TaskCommentFormat()
         {
-            this.DisplayName = Constants.TaskComment + " (//TODO)";
-            this.ForegroundColor = Constants.TaskColor;
+            DisplayName = Constants.TaskComment + " (//TODO)";
+            ForegroundColor = Constants.TaskColor;
         }
+
+        #endregion Public Constructors
+    }
+
+    [Export(typeof (EditorFormatDefinition))]
+    [ClassificationType(ClassificationTypeNames = Constants.WtfComment)]
+    [Name(Constants.WtfComment)]
+    [UserVisible(true)]
+    [Order(After = Priority.High)]
+    public sealed class WtfCommentFormat : ClassificationFormatDefinition
+    {
+        #region Public Constructors
+
+        public WtfCommentFormat()
+        {
+            DisplayName = Constants.WtfComment + " (//!?)";
+            ForegroundColor = Constants.WtfColor;
+        }
+
+        #endregion Public Constructors
+    }
+
+    internal static class Constants
+    {
+        #region Public Fields
+
+        //! Important
+        public const string ImportantComment = "Comment - Important";
+
+        public const string ImportantHtmlComment = "HTML Comment - Important";
+        public const string ImportantXmlComment = "XML Comment - Important";
+
+        //? Question
+        public const string QuestionComment = "Comment - Question";
+
+        public const string QuestionHtmlComment = "HTML Comment - Question";
+        public const string QuestionXmlComment = "XML Comment - Question";
+
+        //x Removed
+        public const string RemovedComment = "Comment - Removed";
+
+        public const string RemovedHtmlComment = "HTML Comment - Removed";
+
+        public const string RemovedXmlComment = "XML Comment - Removed";
+
+        //TODO: This does not need work
+        public const string TaskComment = "Comment - Task";
+
+        public const string TaskHtmlComment = "HTML Comment - Task";
+
+        public const string TaskXmlComment = "XML Comment - Task";
+
+        //!? WTF
+        public const string WtfComment = "Comment - WAT!?";
+
+        public static readonly Color ImportantColor = Colors.Green;
+        public static readonly Color QuestionColor = Colors.Red;
+        public static readonly Color RemovedColor = Colors.Gray;
+        public static readonly Color TaskColor = Colors.DarkBlue;
+        public static readonly Color WtfColor = Colors.Coral;
+
+        #endregion Public Fields
     }
 
     #region HTML
 
-    [Export(typeof(EditorFormatDefinition))]
+    [Export(typeof (EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Constants.ImportantHtmlComment)]
     [Name(Constants.ImportantHtmlComment)]
     [UserVisible(true)]
     [Order(After = Priority.High)]
     public sealed class ImportantHtmlCommentFormat : ClassificationFormatDefinition
     {
+        #region Public Constructors
+
         public ImportantHtmlCommentFormat()
         {
-            this.DisplayName = Constants.ImportantHtmlComment + " (<!--!)";
-            this.ForegroundColor = Constants.ImportantColor;
-            this.IsBold = true;
+            DisplayName = Constants.ImportantHtmlComment + " (<!--!)";
+            ForegroundColor = Constants.ImportantColor;
+            IsBold = true;
         }
+
+        #endregion Public Constructors
     }
 
-    [Export(typeof(EditorFormatDefinition))]
+    [Export(typeof (EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Constants.QuestionHtmlComment)]
     [Name(Constants.QuestionHtmlComment)]
     [UserVisible(true)]
     [Order(After = Priority.High)]
     public sealed class QuestionHtmlCommentFormat : ClassificationFormatDefinition
     {
+        #region Public Constructors
+
         public QuestionHtmlCommentFormat()
         {
-            this.DisplayName = Constants.QuestionHtmlComment + " (<!--?)";
-            this.ForegroundColor = Constants.QuestionColor;
+            DisplayName = Constants.QuestionHtmlComment + " (<!--?)";
+            ForegroundColor = Constants.QuestionColor;
         }
+
+        #endregion Public Constructors
     }
 
-    [Export(typeof(EditorFormatDefinition))]
+    [Export(typeof (EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Constants.RemovedHtmlComment)]
     [Name(Constants.RemovedHtmlComment)]
     [UserVisible(true)]
     [Order(After = Priority.High)]
     public sealed class StrikeoutHtmlCommentFormat : ClassificationFormatDefinition
     {
+        #region Public Constructors
+
         public StrikeoutHtmlCommentFormat()
         {
-            this.DisplayName = Constants.RemovedHtmlComment + " (<!--x)";
-            this.ForegroundColor = Constants.RemovedColor;
-            this.TextDecorations = System.Windows.TextDecorations.Strikethrough;
+            DisplayName = Constants.RemovedHtmlComment + " (<!--x)";
+            ForegroundColor = Constants.RemovedColor;
+            TextDecorations = System.Windows.TextDecorations.Strikethrough;
         }
+
+        #endregion Public Constructors
     }
 
-    [Export(typeof(EditorFormatDefinition))]
+    [Export(typeof (EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Constants.TaskHtmlComment)]
     [Name(Constants.TaskHtmlComment)]
     [UserVisible(true)]
     [Order(After = Priority.High)]
     public sealed class TaskHtmlCommentFormat : ClassificationFormatDefinition
     {
+        #region Public Constructors
+
         public TaskHtmlCommentFormat()
         {
-            this.DisplayName = Constants.TaskHtmlComment + " (<!--TODO)";
-            this.ForegroundColor = Constants.TaskColor;
+            DisplayName = Constants.TaskHtmlComment + " (<!--TODO)";
+            ForegroundColor = Constants.TaskColor;
         }
+
+        #endregion Public Constructors
     }
 
-    #endregion
+    #endregion HTML
 
     #region XML
 
-    [Export(typeof(EditorFormatDefinition))]
+    [Export(typeof (EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Constants.ImportantXmlComment)]
     [Name(Constants.ImportantXmlComment)]
     [UserVisible(true)]
     [Order(After = Priority.High)]
     public sealed class ImportantXmlCommentFormat : ClassificationFormatDefinition
     {
+        #region Public Constructors
+
         public ImportantXmlCommentFormat()
         {
-            this.DisplayName = Constants.ImportantXmlComment + " (<!--!)";
-            this.ForegroundColor = Constants.ImportantColor;
-            this.IsBold = true;
+            DisplayName = Constants.ImportantXmlComment + " (<!--!)";
+            ForegroundColor = Constants.ImportantColor;
+            IsBold = true;
         }
+
+        #endregion Public Constructors
     }
 
-    [Export(typeof(EditorFormatDefinition))]
+    [Export(typeof (EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Constants.QuestionXmlComment)]
     [Name(Constants.QuestionXmlComment)]
     [UserVisible(true)]
     [Order(After = Priority.High)]
     public sealed class QuestionXmlCommentFormat : ClassificationFormatDefinition
     {
+        #region Public Constructors
+
         public QuestionXmlCommentFormat()
         {
-            this.DisplayName = Constants.QuestionXmlComment + " (<!--?)";
-            this.ForegroundColor = Constants.QuestionColor;
+            DisplayName = Constants.QuestionXmlComment + " (<!--?)";
+            ForegroundColor = Constants.QuestionColor;
         }
+
+        #endregion Public Constructors
     }
 
-    [Export(typeof(EditorFormatDefinition))]
+    [Export(typeof (EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Constants.RemovedXmlComment)]
     [Name(Constants.RemovedXmlComment)]
     [UserVisible(true)]
     [Order(After = Priority.High)]
     public sealed class StrikeoutXmlCommentFormat : ClassificationFormatDefinition
     {
+        #region Public Constructors
+
         public StrikeoutXmlCommentFormat()
         {
-            this.DisplayName = Constants.RemovedXmlComment + " (<!--x)";
-            this.ForegroundColor = Constants.RemovedColor;
-            this.TextDecorations = System.Windows.TextDecorations.Strikethrough;
+            DisplayName = Constants.RemovedXmlComment + " (<!--x)";
+            ForegroundColor = Constants.RemovedColor;
+            TextDecorations = System.Windows.TextDecorations.Strikethrough;
         }
+
+        #endregion Public Constructors
     }
 
-    [Export(typeof(EditorFormatDefinition))]
+    [Export(typeof (EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Constants.TaskXmlComment)]
     [Name(Constants.TaskXmlComment)]
     [UserVisible(true)]
     [Order(After = Priority.High)]
     public sealed class TaskXmlCommentFormat : ClassificationFormatDefinition
     {
+        #region Public Constructors
+
         public TaskXmlCommentFormat()
         {
-            this.DisplayName = Constants.TaskXmlComment + " (<!--TODO)";
-            this.ForegroundColor = Constants.TaskColor;
+            DisplayName = Constants.TaskXmlComment + " (<!--TODO)";
+            ForegroundColor = Constants.TaskColor;
         }
+
+        #endregion Public Constructors
     }
 
-    #endregion
+    #endregion XML
 }

@@ -1,33 +1,29 @@
-﻿using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Utilities;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Diagnostics;
-using System.Linq;
-using System.Windows;
-using System.Windows.Media;
-using Microsoft.Win32;
-
-namespace CommentsPlus.ItalicComments
+﻿namespace CommentsPlus.ItalicComments
 {
+    using System;
+    using System.ComponentModel.Composition;
+    using System.Diagnostics;
+    using Microsoft.VisualStudio.Text.Classification;
+    using Microsoft.VisualStudio.Text.Editor;
+    using Microsoft.VisualStudio.Utilities;
+    using Microsoft.Win32;
+
     [Export(typeof(IWpfTextViewCreationListener))]
     [ContentType("code")]
     [TextViewRole(PredefinedTextViewRoles.Document)]
     internal sealed class ViewCreationListener : IWpfTextViewCreationListener
     {
         [Import]
-        IClassificationFormatMapService formatMapService = null;
+        IClassificationFormatMapService _formatMapService;
 
         [Import]
-        IClassificationTypeRegistryService typeRegistry = null;
+        IClassificationTypeRegistryService _typeRegistry;
 
-        static bool _isEnabled;
+        static readonly bool IsEnabled;
 
         static ViewCreationListener()
         {
-            _isEnabled = IsEnabled();
+            IsEnabled = IsExtensionEnabled();
         }
 
         /// <summary>
@@ -36,20 +32,23 @@ namespace CommentsPlus.ItalicComments
         /// <param name="textView">The view to handle.</param>
         public void TextViewCreated(IWpfTextView textView)
         {
-            if (_isEnabled)
-                textView.Properties.GetOrCreateSingletonProperty(() => new FormatMapWatcher(textView, formatMapService.GetClassificationFormatMap(textView), typeRegistry));
+            if (IsEnabled)
+                textView.Properties.GetOrCreateSingletonProperty(() => new FormatMapWatcher(textView, _formatMapService.GetClassificationFormatMap(textView), _typeRegistry));
         }
 
-        static bool IsEnabled()
+        static bool IsExtensionEnabled()
         {
-            bool res = true;
+            var res = true;
 
             try
             {
                 using (var subKey = Registry.CurrentUser.OpenSubKey("Software\\CommentsPlus", false))
                 {
-                    int value = Convert.ToInt32(subKey.GetValue("EnableItalics", 1));
-                    res = value != 0;
+                    if (subKey != null)
+                    {
+                        var value = Convert.ToInt32(subKey.GetValue("EnableItalics", 1));
+                        res = value != 0;
+                    }
                 }
             }
             catch (Exception ex)
